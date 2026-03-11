@@ -26,11 +26,25 @@
     ],
     "screenshots": [
         {
-            "src": "icons/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
+            "src": "icons/screenshot-1.jpg",
+            "sizes": "1080x2340",
+            "type": "image/jpeg",
             "form_factor": "narrow",
-            "label": "Taxímetro Pro - Tela principal"
+            "label": "Taxímetro Pro - Tela Inicial"
+        },
+        {
+            "src": "icons/screenshot-2.jpg",
+            "sizes": "1080x2340",
+            "type": "image/jpeg",
+            "form_factor": "narrow",
+            "label": "Taxímetro Pro - Resumo da Corrida"
+        },
+        {
+            "src": "icons/screenshot-3.jpg",
+            "sizes": "1080x2340",
+            "type": "image/jpeg",
+            "form_factor": "narrow",
+            "label": "Taxímetro Pro - Corrida em Andamento"
         }
     ]
 }
