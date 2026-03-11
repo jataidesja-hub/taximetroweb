@@ -163,6 +163,21 @@
             color: white;
         }
 
+        .btn-stop:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-pip {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            margin-top: 10px;
+            font-size: 0.8rem;
+            padding: 12px;
+            display: none; /* Só aparece quando em corrida */
+        }
+
         /* Modal Resumo */
         .modal-overlay {
             position: fixed;
@@ -278,6 +293,11 @@
             Iniciar Corrida
         </button>
 
+        <button id="btnPip" class="btn btn-pip" onclick="togglePip()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12h5V7h-5v5z"></path><path d="M19 18h2a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2"></path><circle cx="12" cy="18" r="4"></circle></svg>
+            Modo Flutuante
+        </button>
+
         <div class="brand-footer">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline><line x1="12" y1="18" x2="12" y2="6"></line></svg>
             Developed by: <span>J.A Software & Solution</span>
@@ -315,6 +335,10 @@
         </div>
         <button id="btnVerInstall" style="background: var(--primary); border: none; padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 0.75rem;">OK</button>
     </div>
+
+    <!-- Elementos Invisíveis para o Modo Flutuante (PiP) -->
+    <canvas id="pipCanvas" width="300" height="150" style="display:none;"></canvas>
+    <video id="pipVideo" autoplay muted style="display:none;"></video>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -408,7 +432,13 @@
                     document.getElementById('distanciaDisplay').innerText = distanciaTotal.toFixed(2);
                     const valorKm = parseFloat(document.getElementById('valorKm').value) || 0;
                     document.getElementById('totalDisplay').innerText = formatarMoeda(distanciaTotal * valorKm);
+                    
+                    if (document.pictureInPictureElement) {
+                        atualizarCanvasPip();
+                    }
                 }, (err) => { alert("Ative seu GPS!"); }, { enableHighAccuracy: true });
+
+                document.getElementById('btnPip').style.display = 'flex';
 
             } else {
                 finalizarCorrida();
@@ -416,6 +446,10 @@
         }
 
         function finalizarCorrida() {
+            document.getElementById('btnPip').style.display = 'none';
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture();
+            }
             const valorKm = parseFloat(document.getElementById('valorKm').value) || 0;
             const total = distanciaTotal * valorKm;
 
@@ -440,6 +474,60 @@
             document.getElementById('totalDisplay').innerText = "R$ 0,00";
             document.getElementById('distanciaDisplay').innerText = "0.00";
             document.getElementById('tempoDisplay').innerText = "00:00";
+            pathLine.setLatLngs([]);
+            pathCoords = [];
+        }
+
+        // Lógica do Modo Flutuante (PiP)
+        const pipCanvas = document.getElementById('pipCanvas');
+        const pipVideo = document.getElementById('pipVideo');
+        const pipCtx = pipCanvas.getContext('2d');
+
+        function atualizarCanvasPip() {
+            const valorKm = parseFloat(document.getElementById('valorKm').value) || 0;
+            const total = formatarMoeda(distanciaTotal * valorKm);
+            const dist = distanciaTotal.toFixed(2) + " km";
+            
+            // Fundo
+            pipCtx.fillStyle = '#000000';
+            pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+            
+            // Texto Valor
+            pipCtx.fillStyle = '#38bdf8';
+            pipCtx.font = 'bold 50px Outfit, sans-serif';
+            pipCtx.textAlign = 'center';
+            pipCtx.fillText(total, 150, 70);
+            
+            // Texto Info
+            pipCtx.fillStyle = '#ffffff';
+            pipCtx.font = '24px Outfit, sans-serif';
+            pipCtx.fillText(dist + " | " + formatarTempo(tempoSegundos), 150, 115);
+        }
+
+        async function togglePip() {
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    atualizarCanvasPip();
+                    const stream = pipCanvas.captureStream(10); // 10 FPS é suficiente
+                    pipVideo.srcObject = stream;
+                    await pipVideo.play();
+                    await pipVideo.requestPictureInPicture();
+                    
+                    // Manter atualizando enquanto estiver em PiP
+                    const pipInterval = setInterval(() => {
+                        if (!document.pictureInPictureElement) {
+                            clearInterval(pipInterval);
+                            return;
+                        }
+                        atualizarCanvasPip();
+                    }, 1000);
+                }
+            } catch (err) {
+                alert("Seu navegador não suporta janelas flutuantes.");
+                console.error(err);
+            }
         }
 
         // PWA e Instalação
