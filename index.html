@@ -260,6 +260,202 @@
         }
 
         .leaflet-container { background: #000 !important; }
+
+        /* === Busca de Endereço === */
+        .search-section {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-wrapper input {
+            padding-right: 45px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .search-loading {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+
+        .search-loading .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            margin-top: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            list-style: none;
+        }
+
+        .suggestions.show {
+            display: block;
+        }
+
+        .suggestions li {
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.15s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .suggestions li:last-child {
+            border-bottom: none;
+        }
+
+        .suggestions li:hover, .suggestions li:active {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--text);
+        }
+
+        .suggestions li .sug-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+            color: var(--primary);
+        }
+
+        .suggestions li .sug-text {
+            line-height: 1.3;
+        }
+
+        /* === Estimativa === */
+        .estimate-section {
+            display: none;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            animation: fadeSlideIn 0.35s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .estimate-section.show {
+            display: block;
+        }
+
+        .estimate-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .estimate-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .estimate-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .estimate-close:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .estimate-dest {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 14px;
+            line-height: 1.4;
+            padding-left: 2px;
+        }
+
+        .estimate-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .estimate-box {
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .estimate-box .est-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .estimate-box .est-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .estimate-box .est-value.highlight {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .estimate-box.full-width {
+            grid-column: span 2;
+        }
+
+        .estimate-box .est-value.est-time {
+            font-size: 1rem;
+            color: var(--success);
+        }
     </style>
 </head>
 <body>
@@ -271,7 +467,50 @@
 
         <div class="input-group">
             <label>Tarifa por KM (R$)</label>
-            <input type="number" id="valorKm" value="2.50" step="0.10" inputmode="decimal">
+            <input type="number" id="valorKm" value="2.50" step="0.10" inputmode="decimal" oninput="atualizarEstimativaValor()">
+        </div>
+
+        <!-- Busca de Endereço -->
+        <div class="search-section">
+            <label>Destino (estimativa)</label>
+            <div class="search-wrapper">
+                <input type="text" id="inputDestino" placeholder="Digite o endereço de destino..." autocomplete="off">
+                <div class="search-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <div class="search-loading" id="searchLoading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            <ul class="suggestions" id="listaSugestoes"></ul>
+        </div>
+
+        <!-- Estimativa -->
+        <div class="estimate-section" id="estimateSection">
+            <div class="estimate-header">
+                <div class="estimate-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Estimativa de Corrida
+                </div>
+                <button class="estimate-close" onclick="limparEstimativa()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="estimate-dest" id="estDestNome"></div>
+            <div class="estimate-grid">
+                <div class="estimate-box">
+                    <div class="est-label">Distância</div>
+                    <div class="est-value" id="estDistancia">0.0 km</div>
+                </div>
+                <div class="estimate-box">
+                    <div class="est-label">Valor Estimado</div>
+                    <div class="est-value highlight" id="estValor">R$ 0,00</div>
+                </div>
+                <div class="estimate-box full-width">
+                    <div class="est-label">Tempo Estimado</div>
+                    <div class="est-value est-time" id="estTempo">-</div>
+                </div>
+            </div>
         </div>
 
         <div class="display-section">
@@ -354,6 +593,13 @@
         let map, pathLine, userMarker;
         let pathCoords = [];
 
+        // Estimativa
+        let estimateRouteLine = null;
+        let estimateDestMarker = null;
+        let estimateDistKm = 0;
+        let debounceTimer = null;
+        let posicaoAtual = null;
+
         // Inicializar Mapa
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([-23.55, -46.63], 15);
@@ -366,6 +612,180 @@
         }
 
         initMap();
+
+        // Obter posição atual do usuário para centralizar mapa e para rotas
+        navigator.geolocation.getCurrentPosition((pos) => {
+            posicaoAtual = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            userMarker.setLatLng([posicaoAtual.lat, posicaoAtual.lon]);
+            map.setView([posicaoAtual.lat, posicaoAtual.lon], 15);
+        }, () => {}, { enableHighAccuracy: true });
+
+        // =============================================
+        // BUSCA DE ENDEREÇO (Nominatim)
+        // =============================================
+        const inputDestino = document.getElementById('inputDestino');
+        const listaSugestoes = document.getElementById('listaSugestoes');
+        const searchLoading = document.getElementById('searchLoading');
+        const searchIcon = document.querySelector('.search-icon');
+
+        inputDestino.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const q = inputDestino.value.trim();
+            if (q.length < 3) {
+                listaSugestoes.classList.remove('show');
+                return;
+            }
+            debounceTimer = setTimeout(() => buscarEnderecos(q), 500);
+        });
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-section')) {
+                listaSugestoes.classList.remove('show');
+            }
+        });
+
+        async function buscarEnderecos(query) {
+            searchIcon.style.display = 'none';
+            searchLoading.style.display = 'block';
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&accept-language=pt-BR`;
+                const resp = await fetch(url, { headers: { 'User-Agent': 'TaximetroPro/1.0' } });
+                const data = await resp.json();
+                
+                listaSugestoes.innerHTML = '';
+                if (data.length === 0) {
+                    listaSugestoes.innerHTML = '<li style="pointer-events:none;color:var(--text-dim);">Nenhum resultado encontrado</li>';
+                } else {
+                    data.forEach(item => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <svg class="sug-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <span class="sug-text">${item.display_name}</span>
+                        `;
+                        li.addEventListener('click', () => selecionarEndereco(parseFloat(item.lat), parseFloat(item.lon), item.display_name));
+                        listaSugestoes.appendChild(li);
+                    });
+                }
+                listaSugestoes.classList.add('show');
+            } catch (err) {
+                console.error('Erro ao buscar endereços:', err);
+            } finally {
+                searchLoading.style.display = 'none';
+                searchIcon.style.display = 'block';
+            }
+        }
+
+        async function selecionarEndereco(lat, lon, nome) {
+            listaSugestoes.classList.remove('show');
+            inputDestino.value = nome.split(',')[0]; // nome curto
+
+            if (!posicaoAtual) {
+                alert('Aguardando localização GPS...');
+                return;
+            }
+
+            await calcularRota(posicaoAtual.lat, posicaoAtual.lon, lat, lon, nome);
+        }
+
+        // =============================================
+        // CÁLCULO DE ROTA (OSRM)
+        // =============================================
+        async function calcularRota(oriLat, oriLon, destLat, destLon, destNome) {
+            searchIcon.style.display = 'none';
+            searchLoading.style.display = 'block';
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${oriLon},${oriLat};${destLon},${destLat}?overview=full&geometries=geojson`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+
+                if (!data.routes || data.routes.length === 0) {
+                    alert('Não foi possível calcular a rota.');
+                    return;
+                }
+
+                const route = data.routes[0];
+                const distKm = route.distance / 1000;
+                const tempoMin = Math.round(route.duration / 60);
+                const coords = route.geometry.coordinates.map(c => [c[1], c[0]]); // [lon,lat] -> [lat,lon]
+
+                exibirEstimativa(distKm, tempoMin, coords, destNome);
+            } catch (err) {
+                console.error('Erro ao calcular rota:', err);
+                alert('Erro ao calcular rota. Tente novamente.');
+            } finally {
+                searchLoading.style.display = 'none';
+                searchIcon.style.display = 'block';
+            }
+        }
+
+        // =============================================
+        // EXIBIÇÃO DA ESTIMATIVA
+        // =============================================
+        function exibirEstimativa(distKm, tempoMin, rotaCoords, destNome) {
+            estimateDistKm = distKm;
+
+            // Limpar rota anterior se existir
+            if (estimateRouteLine) map.removeLayer(estimateRouteLine);
+            if (estimateDestMarker) map.removeLayer(estimateDestMarker);
+
+            // Desenhar rota estimada (tracejada, cor diferente)
+            estimateRouteLine = L.polyline(rotaCoords, {
+                color: '#f59e0b',
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '10, 8'
+            }).addTo(map);
+
+            // Marcador do destino
+            const destLatLng = rotaCoords[rotaCoords.length - 1];
+            estimateDestMarker = L.circleMarker(destLatLng, {
+                radius: 8,
+                color: '#f59e0b',
+                fillColor: '#f59e0b',
+                fillOpacity: 1
+            }).addTo(map);
+
+            // Ajustar mapa para mostrar rota inteira
+            map.fitBounds(estimateRouteLine.getBounds(), { padding: [30, 30] });
+
+            // Preencher dados
+            const valorKm = parseFloat(document.getElementById('valorKm').value) || 0;
+            document.getElementById('estDistancia').textContent = distKm.toFixed(1) + ' km';
+            document.getElementById('estValor').textContent = formatarMoeda(distKm * valorKm);
+            document.getElementById('estDestNome').textContent = '📍 ' + destNome;
+
+            // Tempo estimado
+            if (tempoMin >= 60) {
+                const h = Math.floor(tempoMin / 60);
+                const m = tempoMin % 60;
+                document.getElementById('estTempo').textContent = `${h}h ${m}min`;
+            } else {
+                document.getElementById('estTempo').textContent = `${tempoMin} min`;
+            }
+
+            document.getElementById('estimateSection').classList.add('show');
+        }
+
+        function atualizarEstimativaValor() {
+            if (estimateDistKm > 0) {
+                const valorKm = parseFloat(document.getElementById('valorKm').value) || 0;
+                document.getElementById('estValor').textContent = formatarMoeda(estimateDistKm * valorKm);
+            }
+        }
+
+        function limparEstimativa() {
+            if (estimateRouteLine) { map.removeLayer(estimateRouteLine); estimateRouteLine = null; }
+            if (estimateDestMarker) { map.removeLayer(estimateDestMarker); estimateDestMarker = null; }
+            estimateDistKm = 0;
+            document.getElementById('estimateSection').classList.remove('show');
+            document.getElementById('inputDestino').value = '';
+
+            // Voltar mapa para posição atual
+            if (posicaoAtual) {
+                map.setView([posicaoAtual.lat, posicaoAtual.lon], 15);
+            }
+        }
 
         function formatarMoeda(valor) {
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
@@ -390,6 +810,7 @@
         async function toggleCorrida() {
             if (!emCorrida) {
                 // INICIAR
+                limparEstimativa();
                 distanciaTotal = 0;
                 tempoSegundos = 0;
                 ultimaPos = null;
