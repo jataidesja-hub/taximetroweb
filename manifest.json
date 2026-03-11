@@ -9,39 +9,38 @@
     "background_color": "#000000",
     "theme_color": "#000000",
     "categories": ["utilities", "navigation"],
-    "prefer_related_applications": false,
     "icons": [
         {
-            "src": "icons/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
+            "src": "icons/icon-1024.jpg",
+            "sizes": "1024x1024",
+            "type": "image/jpeg",
             "purpose": "any"
         },
         {
-            "src": "icons/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
+            "src": "icons/icon-1024.jpg",
+            "sizes": "1024x1024",
+            "type": "image/jpeg",
             "purpose": "maskable"
         }
     ],
     "screenshots": [
         {
             "src": "icons/screenshot-1.jpg",
-            "sizes": "1080x2340",
+            "sizes": "460x1024",
             "type": "image/jpeg",
             "form_factor": "narrow",
             "label": "Taxímetro Pro - Tela Inicial"
         },
         {
             "src": "icons/screenshot-2.jpg",
-            "sizes": "1080x2340",
+            "sizes": "460x1024",
             "type": "image/jpeg",
             "form_factor": "narrow",
             "label": "Taxímetro Pro - Resumo da Corrida"
         },
         {
             "src": "icons/screenshot-3.jpg",
-            "sizes": "1080x2340",
+            "sizes": "460x1024",
             "type": "image/jpeg",
             "form_factor": "narrow",
             "label": "Taxímetro Pro - Corrida em Andamento"
