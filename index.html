@@ -530,6 +530,13 @@
             }
         }
 
+        // Acionamento automático do Modo Flutuante ao sair do App
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'hidden' && emCorrida && !document.pictureInPictureElement) {
+                togglePip();
+            }
+        });
+
         // PWA e Instalação
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
