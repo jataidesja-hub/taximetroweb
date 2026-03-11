@@ -1,17 +1,48 @@
 {
     "name": "Taxímetro Pro",
     "short_name": "Taxímetro",
-    "description": "Taxímetro para motoristas de Uber e particular.",
+    "description": "Taxímetro para motoristas de Uber e particulares.",
     "start_url": ".",
+    "id": "/",
     "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#38bdf8",
+    "orientation": "portrait",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "categories": ["utilities", "navigation"],
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "https://cdn-icons-png.flaticon.com/512/3202/3202926.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/3202/3202926.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "https://cdn-icons-png.flaticon.com/128/3202/3202926.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "https://cdn-icons-png.flaticon.com/256/3202/3202926.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/3202/3202926.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Taxímetro Pro - Tela principal"
         }
     ]
 }
