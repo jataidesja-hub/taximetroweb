@@ -226,6 +226,24 @@
         }
         .install-toast.show { transform: translateX(-50%) translateY(0); }
 
+        .brand-footer {
+            margin-top: 20px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            opacity: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .brand-footer span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
         .leaflet-container { background: #000 !important; }
     </style>
 </head>
@@ -259,6 +277,11 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Iniciar Corrida
         </button>
+
+        <div class="brand-footer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline><line x1="12" y1="18" x2="12" y2="6"></line></svg>
+            Developed by: <span>J.A Software & Solution</span>
+        </div>
     </div>
 
     <!-- Modal de Resumo -->
