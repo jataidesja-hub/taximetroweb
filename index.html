@@ -191,18 +191,69 @@
             color: white;
         }
 
-        .btn-install {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            margin-top: 15px;
-            padding: 12px;
-            font-size: 0.9rem;
-            display: none; /* Oculto por padrão */
+        /* Notificação de Instalação */
+        .install-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            width: calc(100% - 40px);
+            max-width: 360px;
+            background: #1e293b;
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .btn-install:hover {
-            background: rgba(56, 189, 248, 0.1);
+        .install-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .install-icon {
+            background: var(--primary-glow);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .install-content {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .install-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .install-text {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+
+        .btn-install-now {
+            background: var(--primary);
+            color: #0f172a;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         .status-badge {
@@ -281,15 +332,22 @@
             Iniciar Corrida
         </button>
 
-        <button id="btnInstall" class="btn btn-install">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Instalar no Celular
-        </button>
-
         <div class="status-badge" id="statusBadge">
             <div class="status-dot"></div>
             <span id="statusText">Aguardando...</span>
         </div>
+    </div>
+
+    <!-- Toast de Instalação -->
+    <div id="installToast" class="install-toast">
+        <div class="install-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </div>
+        <div class="install-content">
+            <div class="install-title">Instalar App</div>
+            <div class="install-text" id="installMsg">Use como um aplicativo real!</div>
+        </div>
+        <button id="btnVerInstall" class="btn-install-now">Instalar</button>
     </div>
 
     <script>
@@ -414,36 +472,42 @@
 
         // Lógica de Instalação (PWA)
         let deferredPrompt;
-        const btnInstall = document.getElementById('btnInstall');
+        const installToast = document.getElementById('installToast');
+        const btnVerInstall = document.getElementById('btnVerInstall');
+        const installMsg = document.getElementById('installMsg');
+
+        // Detectar se é iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Impedir que o Chrome 67 e anteriores mostrem o prompt automaticamente
             e.preventDefault();
-            // Guardar o evento para que possa ser acionado mais tarde.
             deferredPrompt = e;
-            // Atualizar a UI para notificar o usuário que ele pode instalar o PWA
-            btnInstall.style.display = 'flex';
+            // Mostrar toast com opção de instalar
+            setTimeout(() => installToast.classList.add('show'), 3000);
         });
 
-        btnInstall.addEventListener('click', (e) => {
-            // Esconder o botão
-            btnInstall.style.display = 'none';
-            // Mostrar o prompt de instalação
-            deferredPrompt.prompt();
-            // Aguardar a resposta do usuário
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('Usuário aceitou a instalação');
-                } else {
-                    console.log('Usuário recusou a instalação');
-                }
-                deferredPrompt = null;
-            });
+        // Se for iOS e não for instalado, mostrar instruções
+        if (isIOS && !isStandalone) {
+            installMsg.innerText = "Clique em Compartilhar e 'Tela de Início'";
+            btnVerInstall.innerText = "Entendi";
+            setTimeout(() => installToast.classList.add('show'), 5000);
+        }
+
+        btnVerInstall.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    installToast.classList.remove('show');
+                });
+            } else {
+                installToast.classList.remove('show');
+            }
         });
 
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('App instalado com sucesso!');
-            btnInstall.style.display = 'none';
+        window.addEventListener('appinstalled', () => {
+            installToast.classList.remove('show');
         });
     </script>
 </body>
