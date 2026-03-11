@@ -609,15 +609,22 @@
             
             pathLine = L.polyline([], { color: '#38bdf8', weight: 5, opacity: 0.8 }).addTo(map);
             userMarker = L.circleMarker([0,0], { radius: 8, color: '#fff', fillColor: '#38bdf8', fillOpacity: 1 }).addTo(map);
+
+            // Tentar localização rápida
+            map.locate({ setView: true, maxZoom: 16 });
+            map.on('locationfound', (e) => {
+                posicaoAtual = { lat: e.latlng.lat, lon: e.latlng.lng };
+                userMarker.setLatLng(e.latlng);
+            });
         }
 
         initMap();
 
-        // Obter posição atual do usuário para centralizar mapa e para rotas
+        // Obter posição atual do usuário de forma contínua para rotas
         navigator.geolocation.getCurrentPosition((pos) => {
             posicaoAtual = { lat: pos.coords.latitude, lon: pos.coords.longitude };
             userMarker.setLatLng([posicaoAtual.lat, posicaoAtual.lon]);
-            map.setView([posicaoAtual.lat, posicaoAtual.lon], 15);
+            map.setView([posicaoAtual.lat, posicaoAtual.lon], 16);
         }, () => {}, { enableHighAccuracy: true });
 
         // =============================================
@@ -649,8 +656,15 @@
             searchIcon.style.display = 'none';
             searchLoading.style.display = 'block';
             try {
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&accept-language=pt-BR`;
-                const resp = await fetch(url, { headers: { 'User-Agent': 'TaximetroPro/1.0' } });
+                // Removido countrycodes fixo para ser mais abrangente, e adicionado bias por proximidade se disponível
+                let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&accept-language=pt-BR&addressdetails=1`;
+                
+                if (posicaoAtual) {
+                    // Priorizar resultados perto do usuário
+                    url += `&viewbox=${posicaoAtual.lon-0.1},${posicaoAtual.lat+0.1},${posicaoAtual.lon+0.1},${posicaoAtual.lat-0.1}&bounded=0`;
+                }
+
+                const resp = await fetch(url, { headers: { 'User-Agent': 'TaximetroPro/1.1' } });
                 const data = await resp.json();
                 
                 listaSugestoes.innerHTML = '';
@@ -659,6 +673,10 @@
                 } else {
                     data.forEach(item => {
                         const li = document.createElement('li');
+                        // Simplificar o nome exibido removendo redundâncias do display_name
+                        const parts = item.display_name.split(',');
+                        const shortName = parts.slice(0, 3).join(', ');
+                        
                         li.innerHTML = `
                             <svg class="sug-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                             <span class="sug-text">${item.display_name}</span>
