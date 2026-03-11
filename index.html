@@ -191,6 +191,20 @@
             color: white;
         }
 
+        .btn-install {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            margin-top: 15px;
+            padding: 12px;
+            font-size: 0.9rem;
+            display: none; /* Oculto por padrão */
+        }
+
+        .btn-install:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
         .status-badge {
             margin-top: 24px;
             display: inline-flex;
@@ -265,6 +279,11 @@
         <button id="btnAcao" class="btn btn-start" onclick="toggleCorrida()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Iniciar Corrida
+        </button>
+
+        <button id="btnInstall" class="btn btn-install">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Instalar no Celular
         </button>
 
         <div class="status-badge" id="statusBadge">
@@ -392,6 +411,40 @@
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail', err));
             });
         }
+
+        // Lógica de Instalação (PWA)
+        let deferredPrompt;
+        const btnInstall = document.getElementById('btnInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Impedir que o Chrome 67 e anteriores mostrem o prompt automaticamente
+            e.preventDefault();
+            // Guardar o evento para que possa ser acionado mais tarde.
+            deferredPrompt = e;
+            // Atualizar a UI para notificar o usuário que ele pode instalar o PWA
+            btnInstall.style.display = 'flex';
+        });
+
+        btnInstall.addEventListener('click', (e) => {
+            // Esconder o botão
+            btnInstall.style.display = 'none';
+            // Mostrar o prompt de instalação
+            deferredPrompt.prompt();
+            // Aguardar a resposta do usuário
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('Usuário aceitou a instalação');
+                } else {
+                    console.log('Usuário recusou a instalação');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App instalado com sucesso!');
+            btnInstall.style.display = 'none';
+        });
     </script>
 </body>
 </html>
